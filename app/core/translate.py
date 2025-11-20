@@ -42,7 +42,7 @@ class TranslationManager:
     def init_from_installed(self) -> None:
         """
         Carrega idiomas e tradutores a partir dos modelos
-        JÁ instalados no Argos.
+        Já instalados no Argos.
         Não baixa nada, só usa o que já existe.
         """
         installed_langs = argos_translate.get_installed_languages()
@@ -125,10 +125,10 @@ def ensure_models_installed() -> None:
         argos_package.install_from_path(download_path)
 
 
-def _is_model_installed(from_code: str, to_code: str) -> bool:
-    """
-    Verifica se já existe um modelo Argos para from_code->to_code.
-    """
+
+
+def _is_model_installed(from_code: str, to_code: str) -> bool:      
+    
     installed = argos_translate.get_installed_languages()
     by_code = {lang.code: lang for lang in installed}
     if from_code not in by_code or to_code not in by_code:
