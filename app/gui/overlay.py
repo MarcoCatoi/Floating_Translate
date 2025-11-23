@@ -87,8 +87,8 @@ class Overlay(QWidget):
 
         if self._rubber_band is None:
             self._rubber_band = QRubberBand(QRubberBand.Rectangle, self)
-
-        self._rubber_band.setGeometry(QRect(self._origin, self._origin))
+        local_origin = self.mapFromGlobal(self._origin)
+        self._rubber_band.setGeometry(QRect(local_origin, local_origin))
         self._rubber_band.show()
 
     def mouseMoveEvent(self, event) -> None:
@@ -109,14 +109,14 @@ class Overlay(QWidget):
         if self._origin is None or self._rubber_band is None:
             self.hide()
             return
-
+        dpi_scale = 1.25
         end_pos = event.globalPosition().toPoint()
         rect = QRect(self._origin, end_pos).normalized()
 
-        x1 = rect.left()
-        y1 = rect.top()
-        x2 = rect.right()
-        y2 = rect.bottom()
+        x1 = rect.left() * dpi_scale
+        y1 = rect.top() * dpi_scale
+        x2 = rect.right() * dpi_scale
+        y2 = rect.bottom() * dpi_scale
 
         self._rubber_band.hide()
         self.hide()
@@ -129,9 +129,12 @@ class Overlay(QWidget):
 if __name__ == "__main__":
     import sys
     from PySide6.QtWidgets import QApplication
+    from app.core.capture import grab_region
 
     def on_selection(bbox: Tuple[int, int, int, int]) -> None:
         print("Seleção:", bbox)
+        img = grab_region(bbox)
+        img.show()
         QApplication.instance().quit()
 
     app = QApplication(sys.argv)

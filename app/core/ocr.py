@@ -18,6 +18,8 @@ Se o Tesseract não estiver no PATH do Windows, descomente e ajuste a linha abai
 pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 '''
 
+tess_config = r"--oem 3 --psm 6 -c tessedit_char_blacklist=|"
+
 def image_to_text(
     image: Union[Image.Image, "numpy.ndarray"],
     lang: str = "eng+por",
@@ -38,7 +40,8 @@ def image_to_text(
     text = pytesseract.image_to_string(
         image,
         lang=lang,
-        config=config if config else None,
+        config = tess_config,
+        # config=config if config else None,
     )
 
     return text.strip()
