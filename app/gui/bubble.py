@@ -42,7 +42,6 @@ class TranslationBubble(QWidget):
             }
         """)
         btn_close.clicked.connect(self.close)
-
         top_layout = QHBoxLayout()
         top_layout.setContentsMargins(0, 0, 0, 0)
         top_layout.addWidget(title)
@@ -59,6 +58,7 @@ class TranslationBubble(QWidget):
                 border: none;
             }
         """)
+        btn_close.clicked.connect(self.text_translated.clear)
 
         main_layout = QVBoxLayout()
         main_layout.setContentsMargins(8, 8, 8, 8)
@@ -102,11 +102,12 @@ class TranslationBubble(QWidget):
     def append_translation(self, translated: str) -> None:
         if translated:
             self.text_translated.append(translated)
-            self.text_translated.append("-" * 30)
-
+            # self.text_translated.append("-" * 30)
+            
     # Atalho: ESC fecha a bubble
     def keyPressEvent(self, event) -> None:
         if event.key() == Qt.Key_Escape:
             self.close()
+            self.text_translated.clear()
         else:
             super().keyPressEvent(event)

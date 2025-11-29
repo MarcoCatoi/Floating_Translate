@@ -9,6 +9,7 @@ from PySide6.QtWidgets import QApplication
 from app.gui.overlay import Overlay
 from app.gui.bubble import TranslationBubble
 from app.gui.floating_button import FloatingButton
+from app.gui.exit_button import ExitButton
 from app.core.capture import grab_region
 from app.core.preprocess import enhance_for_ocr
 from app.core.ocr import image_to_text
@@ -33,13 +34,18 @@ class FloatingTranslateApp:
 
         self.floating_button = FloatingButton()
         self.floating_button.clicked_for_selection.connect(self.show_overlay)
-        self.floating_button.quit_requested.connect(self.quit)
+        # self.floating_button.quit_requested.connect(self.quit)
         self.floating_button.show()
+
+        self.exit_button = ExitButton()
+        self.exit_button.quit_requested.connect(self.quit)
+        self.exit_button.show()
 
     def quit(self) -> None:
         self.overlay.close()
         self.panel.close()
         self.floating_button.close()
+        self.exit_button.close()
         QApplication.instance().quit()
         
     def show_overlay(self) -> None:
