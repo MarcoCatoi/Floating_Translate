@@ -4,9 +4,12 @@ from PySide6.QtCore import Qt, Signal, QPoint
 from PySide6.QtWidgets import QWidget, QPushButton, QHBoxLayout
 from PySide6.QtGui import QCursor, QIcon
 
+from app.gui.exit_zone import ExitZone
+
 
 class FloatingButton(QWidget):
     clicked_for_selection = Signal()
+    quit_requested = Signal()
 
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
@@ -23,12 +26,12 @@ class FloatingButton(QWidget):
         self.button = QPushButton()
         self.button.setFixedSize(48, 48)
         self.button.setCursor(QCursor(Qt.PointingHandCursor))
-        # opcional: ícone
-        # self.button.setIcon(QIcon("app/resources/translate_icon.png"))
-        # self.button.setIconSize(self.button.size() * 0.6)
+        
+        self.button.setIcon(QIcon("app/resources/translate_icon.png"))
+        self.button.setIconSize(self.button.size())
         self.button.setStyleSheet("""
             QPushButton {
-                background-color: #2d89ef;
+                background-color: transparent;
                 border-radius: 24px;
                 border: 2px solid white;
             }
@@ -44,7 +47,8 @@ class FloatingButton(QWidget):
         # estado para diferenciar clique x arraste
         self._press_pos: QPoint | None = None
         self._dragging = False
-
+        self.exit_zone = ExitZone()
+        self.exit_zone.hide()
         # não conecta clicked direto; vai ser emitido manualmente
         self.button.installEventFilter(self)
 
@@ -58,12 +62,37 @@ class FloatingButton(QWidget):
         y = screen.bottom() - self.height() - margin
         self.move(x, y)
 
+    def _init_hotspot(self) -> None:
+        """
+        Define a posição do hotspot. Aqui: centro inferior da tela.
+        """
+        screen = self.screen().geometry()
+        cx = screen.center().x()
+        cy = screen.bottom() - 80  # sobe um pouco do fundo
+        self._hotspot_center = QPoint(cx, cy)
+
+    def _is_over_hotspot(self) -> bool:
+        """
+        Verifica se o centro do botão está dentro do círculo do hotspot.
+        """
+        # centro do botão em coordenadas de tela
+        btn_geom = self.geometry()          # posição global do widget
+        cx_btn = btn_geom.center().x()
+        cy_btn = btn_geom.center().y()
+
+        dx = cx_btn - self._hotspot_center.x()
+        dy = cy_btn - self._hotspot_center.y()
+        dist2 = dx * dx + dy * dy
+        return dist2 <= self._hotspot_radius * self._hotspot_radius
+
     def eventFilter(self, obj, event):
         if obj is self.button:
             t = event.type()
             if t == event.Type.MouseButtonPress and event.button() == Qt.LeftButton:
                 self._press_pos = event.globalPosition().toPoint()
                 self._dragging = False
+                self.exit_zone.move_to_bottom_center()
+                self.exit_zone.show()
                 return False  # deixa o botão ver o press (para visual)
 
             elif t == event.Type.MouseMove and event.buttons() & Qt.LeftButton and self._press_pos is not None:
@@ -81,10 +110,28 @@ class FloatingButton(QWidget):
 
             elif t == event.Type.MouseButtonRelease and event.button() == Qt.LeftButton:
                 # se NÃO estava arrastando, tratamos como clique "real"
-                if not self._dragging:
+                if self._dragging:
+                # terminou um arraste: checa colisão com a exit_zone
+                    btn_geom = self.geometry()
+                    cx_btn = btn_geom.center().x()
+                    cy_btn = btn_geom.center().y()
+
+                    center = self.exit_zone.center_point()
+                    r = self.exit_zone.radius()
+
+                    dx = cx_btn - center.x()
+                    dy = cy_btn - center.y()
+                    dist2 = dx * dx + dy * dy
+
+                    if dist2 <= r * r:
+                        self.quit_requested.emit()
+                else:
+                    # clique "normal"
                     self.clicked_for_selection.emit()
+
                 self._press_pos = None
                 self._dragging = False
-                return True  # já tratamos release; evita clicked interno
+                self.exit_zone.hide()  # some depois de soltar
+                return True
 
         return super().eventFilter(obj, event)
