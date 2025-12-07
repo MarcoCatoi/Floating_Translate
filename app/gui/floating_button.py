@@ -53,15 +53,15 @@ class FloatingButton(QWidget):
         self.button.installEventFilter(self)
 
         self.adjustSize()
-        self.move_to_bottom_right()
+        self.move_to_top_right()
 
-    def move_to_bottom_right(self) -> None:
+    def move_to_top_right(self) -> None:
         screen = self.screen().geometry()
         margin = 20
         x = screen.right() - self.width() - margin
-        y = screen.bottom() - self.height() - margin
+        y = screen.top() + margin
         self.move(x, y)
-
+ 
     def _init_hotspot(self) -> None:
         """
         Define a posição do hotspot. Aqui: centro inferior da tela.
@@ -88,30 +88,54 @@ class FloatingButton(QWidget):
     def eventFilter(self, obj, event):
         if obj is self.button:
             t = event.type()
+
             if t == event.Type.MouseButtonPress and event.button() == Qt.LeftButton:
                 self._press_pos = event.globalPosition().toPoint()
                 self._dragging = False
+                # só posiciona, mas não mostra ainda
                 self.exit_zone.move_to_bottom_center()
-                self.exit_zone.show()
-                return False  # deixa o botão ver o press (para visual)
+                return False
 
             elif t == event.Type.MouseMove and event.buttons() & Qt.LeftButton and self._press_pos is not None:
                 current = event.globalPosition().toPoint()
                 if not self._dragging:
-                    # começa a arrastar só depois de mover um pouco
                     if (current - self._press_pos).manhattanLength() > 5:
                         self._dragging = True
+
                 if self._dragging:
+                    # move o botão
                     offset = current - self._press_pos
                     self.move(self.pos() + offset)
                     self._press_pos = current
+
+                    # calcula colisão com o centro da exit_zone
+                    btn_geom = self.geometry()          # global
+                    cx_btn = btn_geom.center().x()
+                    cy_btn = btn_geom.center().y()
+
+                    center = self.exit_zone.center_point()
+                    r = self.exit_zone.radius()
+
+                    dx = cx_btn - center.x()
+                    dy = cy_btn - center.y()
+                    dist2 = dx * dx + dy * dy
+
+                    if dist2 <= r * r:
+                        # entrou no raio: mostra a zona
+                        if not self.exit_zone.isVisible():
+                            self.exit_zone.show()
+                    else:
+                        # saiu do raio: esconde
+                        if self.exit_zone.isVisible():
+                            self.exit_zone.hide()
+
                     return True  # consumimos o move
+
                 return False
 
             elif t == event.Type.MouseButtonRelease and event.button() == Qt.LeftButton:
-                # se NÃO estava arrastando, tratamos como clique "real"
                 if self._dragging:
-                # terminou um arraste: checa colisão com a exit_zone
+                    # ao soltar, se ainda estiver dentro da zona -> sair
                     btn_geom = self.geometry()
                     cx_btn = btn_geom.center().x()
                     cy_btn = btn_geom.center().y()
@@ -126,12 +150,13 @@ class FloatingButton(QWidget):
                     if dist2 <= r * r:
                         self.quit_requested.emit()
                 else:
-                    # clique "normal"
+                    # clique normal, sem arraste
                     self.clicked_for_selection.emit()
 
                 self._press_pos = None
                 self._dragging = False
-                self.exit_zone.hide()  # some depois de soltar
+                self.exit_zone.hide()   # sempre some ao soltar
                 return True
 
         return super().eventFilter(obj, event)
+

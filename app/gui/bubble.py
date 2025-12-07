@@ -22,7 +22,7 @@ class TranslationBubble(QWidget):
         self.setPalette(palette)
         self.setAutoFillBackground(True)
         self.setWindowOpacity(0.35)
-
+        
         # --- barra superior com "Tradução" + X ---
         title = QLabel("Tradução")
         title.setStyleSheet("color: white; font-weight: bold;")
@@ -67,7 +67,7 @@ class TranslationBubble(QWidget):
         self.setLayout(main_layout)
 
         self.resize(420, 160)
-        self.move_to_bottom_right()
+        self.move_to_top_right()
         self._drag_pos = None
 
     def mousePressEvent(self, event) -> None:
@@ -84,11 +84,11 @@ class TranslationBubble(QWidget):
         else:
             super().mouseMoveEvent(event)
 
-    def move_to_bottom_right(self) -> None:
+    def move_to_top_right(self) -> None:
         screen = self.screen().geometry()
         margin = 40
         x = screen.right() - self.width() - margin
-        y = screen.bottom() - self.height() - margin
+        y = screen.top() + margin
         self.move(x, y)
 
     def mouseReleaseEvent(self, event) -> None:
