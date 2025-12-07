@@ -12,10 +12,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Dict, Optional
 
-import argostranslate.package as argos_package
-import argostranslate.translate as argos_translate
-
-
 # Pares de idiomas que você quer suportar
 LANGUAGE_PAIRS = [
     ("en", "pt"),
@@ -40,6 +36,8 @@ class TranslationManager:
         self._pairs: Dict[tuple[str, str], TranslatorPair] = {}
 
     def init_from_installed(self) -> None:
+        
+        import argostranslate.translate as argos_translate
         """
         Carrega idiomas e tradutores a partir dos modelos
         Já instalados no Argos.
@@ -99,6 +97,7 @@ def get_manager() -> TranslationManager:
 
 
 def ensure_models_installed() -> None:
+    import argostranslate.package as argos_package
     """
     Opcional: baixa e instala automaticamente os modelos en↔pt
     usando o índice oficial do Argos.
@@ -128,7 +127,7 @@ def ensure_models_installed() -> None:
 
 
 def _is_model_installed(from_code: str, to_code: str) -> bool:      
-    
+    import argostranslate.translate as argos_translate
     installed = argos_translate.get_installed_languages()
     by_code = {lang.code: lang for lang in installed}
     if from_code not in by_code or to_code not in by_code:

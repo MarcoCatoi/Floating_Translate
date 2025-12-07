@@ -9,7 +9,6 @@ se necessário, que o caminho do executável foi configurado.
 from typing import Optional, Union
 
 from PIL import Image
-import pytesseract
 
 import numpy
 
@@ -26,7 +25,7 @@ def image_to_text(
     psm: Optional[int] = None,
     oem: Optional[int] = None,
 ) -> str:
-    
+    import pytesseract
     config_parts = []           # Executa OCR em uma imagem e retorna o texto reconhecido.
 
     if psm is not None:
@@ -53,7 +52,7 @@ def detect_data(
     psm: Optional[int] = None,
     oem: Optional[int] = None,
 ) -> dict:          # Retorna dados estruturados do Tesseract
-    
+    import pytesseract
     config_parts = []
 
     if psm is not None:
